@@ -55,6 +55,66 @@ booksRoutes.post("/", async ({ body }) => {
 });
 
 
+booksRoutes.get('/',async()=>{
+
+    try{
+        const allBooks=await db.select().from(books)
+        console.log("allbooooooooks",allBooks)
+        return {
+            success:true,
+            message:"Books fetched Succesfully ",
+            data:allBooks
+        }
+
+        
+
+    }catch(error){
+        console.log('Database error',error)
+        return{
+            success:false,
+            message:'failed to fetch books'
+        }
+    }  
+
+})
+
+
+booksRoutes.get('/:id',async({params})=>{
+
+    try{
+        const bookId=Number(params.id);
+        const book=await db.query.books.findFirst({
+            where:(books,{eq})=>eq(books.id,bookId),
+        })
+
+        
+
+        if (!book) {
+            return {
+              success: false,
+              message: `Book with ID ${bookId} not found.`,
+            }
+        }
+
+            return {
+                success: true,
+                message: "Book fetched successfully",
+                data: book,
+              };
+
+    }catch(error){
+        console.log("❌ Error fetching book:", error);
+
+        return {
+            success: false,
+            message: "An error occurred while fetching the book.",
+          };
+    }
+
+})
+
+
+
 
 
 
