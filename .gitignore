@@ -1,0 +1,25 @@
+# Bun
+bun.lockb
+
+# Node-related
+node_modules/
+dist/
+.env
+.env.*  # in case you use .env.development, .env.production, etc.
+
+# Logs
+*.log
+logs/
+npm-debug.log*
+
+# OS-specific
+.DS_Store
+Thumbs.db
+
+# Editor folders
+.vscode/
+.idea/
+*.swp
+
+# Drizzle specific
+drizzle/
