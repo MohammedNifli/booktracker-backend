@@ -3,6 +3,7 @@ import { bookSchema } from "../schemas/bookSchema";
 import { parse } from "dotenv";
 import { db } from "../db";
 import { books } from "../models/book";
+import { eq } from 'drizzle-orm';
 
 const booksRoutes = new Elysia({ prefix: "/books" });
 
@@ -113,6 +114,99 @@ booksRoutes.get('/:id',async({params})=>{
 
 })
 
+
+
+
+booksRoutes.put('/:id', async ({ body,params }) => {
+ 
+    const bookId = Number(params.id);
+
+  if (isNaN(bookId)) {
+    return {
+      success: false,
+      error: 'Invalid book ID',
+      message: 'Please provide a valid numeric book ID'
+    };
+  }
+
+  
+  const parsed = bookSchema.partial().safeParse(body);
+  if (!parsed.success) {
+    return {
+      success: false,
+      error: 'Validation failed',
+      details: parsed.error.format(),
+    };
+  }
+
+  const updateData = parsed.data;
+
+  try {
+   
+    const existingBook = await db.query.books.findFirst({
+      where: eq(books.id, bookId)
+    });
+    console.log("existing book",existingBook)
+
+    if (!existingBook) {
+      return {
+        success: false,
+        error: 'Not Found',
+        message: `Book with ID ${bookId} not found`
+      };
+    }
+
+
+    const [updatedBook] = await db.update(books)
+      .set({
+        ...updateData,
+        updatedAt: new Date() 
+      })
+      .where(eq(books.id, bookId))
+      .returning();
+
+    return {
+      success: true,
+      data: updatedBook,
+      message: 'Book updated successfully'
+    };
+
+  } catch (error) {
+    console.error('Update error:', error);
+    return {
+      success: false,
+      error: 'Update Failed',
+      message: error instanceof Error ? error.message : 'Database operation failed'
+    };
+  }
+});
+
+
+booksRoutes.delete('/:id', async ({ params }) => {
+    try {
+      const bookId = Number(params.id);
+  
+      const result = await db.delete(books).where(eq(books.id, bookId));
+  
+      if (result.rowCount === 0) {
+        return {
+          error: 'Book not found',
+          message: `No book found with ID ${bookId}`,
+        };
+      }
+  
+      return {
+        message: 'Book deleted successfully',
+      };
+    } catch (error) {
+      console.error('Error deleting book:', error);
+      return {
+        error: 'Database operation failed',
+        message: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  });
+  
 
 
 
