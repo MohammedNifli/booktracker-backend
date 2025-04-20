@@ -1,4 +1,4 @@
-import { pgTable, serial, varchar, text, date, pgEnum } from "drizzle-orm/pg-core"
+import { pgTable, serial, varchar, text, date, pgEnum ,timestamp} from "drizzle-orm/pg-core"
 
 export const bookStatusEnum=pgEnum('book_status',[
     'not_started',
@@ -11,6 +11,6 @@ export const books = pgTable('books', {
   title: varchar('title', { length: 255 }).notNull(),  
   author: varchar('author', { length: 255 }).notNull(),  
   status: bookStatusEnum('status').notNull().default('not_started'),  
-  createdAt: date('created_at').defaultNow().notNull(),
-  updatedAt:date('updated_at').defaultNow().notNull()
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt:timestamp('updated_at').defaultNow().notNull()
 })
