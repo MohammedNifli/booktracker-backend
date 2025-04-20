@@ -2,18 +2,20 @@ import {Elysia,t} from 'elysia'
 import dotenv from 'dotenv'
 import {db,poolClient} from './db/index'
 import booksRoutes from './routes/booksRoutes'
+import noteRoutes from './routes/notesRoutes'
 
 dotenv.config()
 
 const app=new Elysia()
 
 app.use(booksRoutes)
+app.use(noteRoutes)
 
 const port=process.env.PORT || 4000
 
 
 
-app.get('/',()=>"Hello world")
+// app.get('/',()=>"Hello world")
 
 app.onStart(async () => {
     try {

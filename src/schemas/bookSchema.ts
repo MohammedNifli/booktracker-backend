@@ -6,4 +6,3 @@ export const bookSchema=z.object({
     status:z.enum(['not_started','in_progress','finished'])    
 
 })
-
