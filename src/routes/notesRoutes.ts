@@ -2,7 +2,6 @@ import { Elysia } from "elysia";
 import { notSchema } from "../schemas/noteSchema";
 import { db } from "../db";
 import { notes } from "../models/note";
-import { parse } from "dotenv";
 import { eq } from "drizzle-orm";
 
 const noteRoutes = new Elysia({ prefix: "/books" });
@@ -71,6 +70,43 @@ noteRoutes.get("/:id/notes", async ({ params }) => {
     return {
       error: "Failed to fetch notes",
       message: error.message,
+    };
+  }
+});
+
+noteRoutes.delete("/:id", async ({ params }) => {
+  const noteId = Number(params.id);
+
+  if (isNaN(noteId)) {
+    return {
+      status: 400,
+      error: "Invalid ID",
+      message: `The provided ID is not a valid number: ${params.id}`,
+    };
+  }
+
+  try {
+    const deletedNote = await db.delete(notes).where(eq(notes.id, noteId));
+
+    if (deletedNote.rowCount === 0) {
+      return {
+        status: 404,
+        error: "Note not found",
+        message: `No note found with ID ${noteId}`,
+      };
+    }
+
+    return {
+      status: 200,
+      message: "Note deleted successfully",
+    };
+  } catch (error) {
+    console.error("Error deleting note:", error);
+    return {
+      status: 500,
+      error: "Server error",
+      message:
+        "An error occurred while deleting the note. Please try again later.",
     };
   }
 });

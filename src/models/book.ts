@@ -7,10 +7,13 @@ export const bookStatusEnum=pgEnum('book_status',[
 ])
 
 export const books = pgTable('books', {
-  id: serial('id').primaryKey(),  
-  title: varchar('title', { length: 255 }).notNull(),  
-  author: varchar('author', { length: 255 }).notNull(),  
-  status: bookStatusEnum('status').notNull().default('not_started'),  
+  id: serial('id').primaryKey(),
+  title: varchar('title', { length: 255 }).notNull(),
+  author: varchar('author', { length: 255 }).notNull(),
+  description: text('description'),  
+  image: varchar('image', { length: 1024 }),  
+  status: bookStatusEnum('status').notNull().default('not_started'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
-  updatedAt:timestamp('updated_at').defaultNow().notNull()
-})
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
