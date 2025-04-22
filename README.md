@@ -45,9 +45,13 @@ Create a .env file at the root of the backend project and add your environment v
 Example .env configuration:
 
 DATABASE_URL=postgresql://postgres:<Password>@localhost:5432/booktracker
+
 PORT=4000
+
 CLOUDINARY_CLOUD_NAME=your_cloud_name
+
 CLOUDINARY_API_KEY=your_api_key
+
 CLOUDINARY_API_SECRET=your_api_secret
 
 > Replace <Password> with your actual database password.
