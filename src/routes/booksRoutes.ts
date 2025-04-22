@@ -5,11 +5,10 @@ import { db } from "../db";
 import { books } from "../models/book";
 import { eq } from "drizzle-orm";
 
+import { StatusCodeEnum } from "../enum/statusCode";
 import { uploadToCloudinary } from "../config/cloudinary";
 
 const booksRoutes = new Elysia({ prefix: "/books" });
-
-
 
 booksRoutes.post("/", async ({ request, set }) => {
   try {
@@ -29,7 +28,7 @@ booksRoutes.post("/", async ({ request, set }) => {
         imageUrl = result.secure_url;
       } catch (uploadError) {
         console.error("Cloudinary upload error:", uploadError);
-        set.status = 500;
+        set.status = StatusCodeEnum.INTERNAL_SERVER_ERROR;
         return {
           success: false,
           error: "Failed to upload image",
@@ -46,7 +45,7 @@ booksRoutes.post("/", async ({ request, set }) => {
     });
 
     if (!parsed.success) {
-      set.status = 400;
+      set.status = StatusCodeEnum.BAD_REQUEST;
       return {
         success: false,
         error: "Validation failed",
@@ -62,7 +61,7 @@ booksRoutes.post("/", async ({ request, set }) => {
     });
 
     if (existingBook) {
-      set.status = 400;
+      set.status = StatusCodeEnum.BAD_REQUEST;
       return {
         success: false,
         error: "Book already exists",
@@ -79,6 +78,7 @@ booksRoutes.post("/", async ({ request, set }) => {
         image: book.image,
       })
       .returning();
+    set.status = StatusCodeEnum.CREATED;
 
     return {
       success: true,
@@ -87,7 +87,7 @@ booksRoutes.post("/", async ({ request, set }) => {
     };
   } catch (error) {
     console.error("Server error:", error);
-    set.status = 500;
+    set.status = StatusCodeEnum.BAD_REQUEST;
     return {
       success: false,
       error: "Internal server error",
@@ -95,9 +95,11 @@ booksRoutes.post("/", async ({ request, set }) => {
   }
 });
 
-booksRoutes.get("/", async () => {
+booksRoutes.get("/", async ({ set }) => {
   try {
     const allBooks = await db.select().from(books);
+
+    set.status = StatusCodeEnum.OK;
 
     return {
       success: true,
@@ -113,7 +115,7 @@ booksRoutes.get("/", async () => {
   }
 });
 
-booksRoutes.get("/:id", async ({ params }) => {
+booksRoutes.get("/:id", async ({ params, set }) => {
   try {
     const bookId = Number(params.id);
     const book = await db.query.books.findFirst({
@@ -121,11 +123,14 @@ booksRoutes.get("/:id", async ({ params }) => {
     });
 
     if (!book) {
+      set.status = StatusCodeEnum.NOT_FOUND;
       return {
         success: false,
         message: `Book with ID ${bookId} not found.`,
       };
     }
+
+    set.status = StatusCodeEnum.OK;
 
     return {
       success: true,
@@ -133,7 +138,8 @@ booksRoutes.get("/:id", async ({ params }) => {
       data: book,
     };
   } catch (error) {
-    console.log("❌ Error fetching book:", error);
+    console.log(" Error fetching book:", error);
+    set.status = StatusCodeEnum.INTERNAL_SERVER_ERROR;
 
     return {
       success: false,
@@ -142,10 +148,11 @@ booksRoutes.get("/:id", async ({ params }) => {
   }
 });
 
-booksRoutes.put("/:id", async ({ body, params }) => {
+booksRoutes.put("/:id", async ({ body, params, set }) => {
   const bookId = Number(params.id);
 
   if (isNaN(bookId)) {
+    set.status = StatusCodeEnum.BAD_REQUEST;
     return {
       success: false,
       error: "Invalid book ID",
@@ -155,6 +162,7 @@ booksRoutes.put("/:id", async ({ body, params }) => {
 
   const parsed = bookSchema.partial().safeParse(body);
   if (!parsed.success) {
+    set.status = StatusCodeEnum.BAD_REQUEST;
     return {
       success: false,
       error: "Validation failed",
@@ -171,6 +179,7 @@ booksRoutes.put("/:id", async ({ body, params }) => {
     console.log("existing book", existingBook);
 
     if (!existingBook) {
+      set.status = StatusCodeEnum.NOT_FOUND;
       return {
         success: false,
         error: "Not Found",
@@ -187,6 +196,8 @@ booksRoutes.put("/:id", async ({ body, params }) => {
       .where(eq(books.id, bookId))
       .returning();
 
+    set.status = StatusCodeEnum.OK;
+
     return {
       success: true,
       data: updatedBook,
@@ -194,6 +205,7 @@ booksRoutes.put("/:id", async ({ body, params }) => {
     };
   } catch (error) {
     console.error("Update error:", error);
+    set.status = StatusCodeEnum.INTERNAL_SERVER_ERROR;
     return {
       success: false,
       error: "Update Failed",
@@ -203,34 +215,36 @@ booksRoutes.put("/:id", async ({ body, params }) => {
   }
 });
 
-booksRoutes.delete("/:id", async ({ params }) => {
+booksRoutes.delete("/:id", async ({ params, set }) => {
   try {
     const bookId = Number(params.id);
 
-    // Check if the bookId is valid
     if (isNaN(bookId)) {
+      set.status = StatusCodeEnum.BAD_REQUEST;
       return {
         error: "Invalid ID",
         message: `The provided ID is not a valid number: ${params.id}`,
       };
     }
 
-    console.log("BookId:", bookId);
-
     const result = await db.delete(books).where(eq(books.id, bookId));
 
     if (result.rowCount === 0) {
+      set.status = StatusCodeEnum.NOT_FOUND;
       return {
         error: "Book not found",
         message: `No book found with ID ${bookId}`,
       };
     }
 
+    set.status = StatusCodeEnum.OK;
+
     return {
       message: "Book deleted successfully",
     };
   } catch (error) {
     console.error("Error deleting book:", error);
+    set.status = StatusCodeEnum.INTERNAL_SERVER_ERROR;
     return {
       error: "Database operation failed",
       message: error instanceof Error ? error.message : "Unknown error",

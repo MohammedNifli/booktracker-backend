@@ -4,6 +4,7 @@ import { db, poolClient } from "./db/index";
 import booksRoutes from "./routes/booksRoutes";
 import noteRoutes from "./routes/notesRoutes";
 import { cors } from "@elysiajs/cors";
+import { StatusCodeEnum } from "./enum/statusCode";
 
 dotenv.config();
 
@@ -12,16 +13,24 @@ app.use(cors());
 app.use(booksRoutes);
 app.use(noteRoutes);
 
-const port = process.env.PORT || 4000;
+app.onError(({ code, error, set }) => {
+  console.error("Global Error Handler:", error);
+  set.status = StatusCodeEnum.INTERNAL_SERVER_ERROR;
 
-// app.get('/',()=>"Hello world")
+  return {
+    success: false,
+    error: code ?? "UNHANDLED_ERROR",
+  };
+});
+
+const port = process.env.PORT || 4000;
 
 app.onStart(async () => {
   try {
     await poolClient.query("SELECT 1"); // Just pinging the DB
-    console.log("✅ Database connected successfully");
+    console.log(" Database connected successfully");
   } catch (err) {
-    console.error("❌ Database connection failed:", err);
+    console.error(" Database connection failed:", err);
   }
 });
 
