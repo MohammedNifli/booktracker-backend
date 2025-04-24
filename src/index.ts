@@ -14,14 +14,18 @@ app.use(booksRoutes);
 app.use(noteRoutes);
 
 app.onError(({ code, error, set }) => {
-  console.error("Global Error Handler:", error);
-  set.status = StatusCodeEnum.INTERNAL_SERVER_ERROR;
+  console.error("Error:", error);
+
+  set.status = code === "NOT_FOUND" ? StatusCodeEnum.NOT_FOUND
+             : code === "VALIDATION" ? StatusCodeEnum.BAD_REQUEST
+             : StatusCodeEnum.INTERNAL_SERVER_ERROR;
 
   return {
     success: false,
     error: code ?? "UNHANDLED_ERROR",
   };
 });
+
 
 const port = process.env.PORT || 4000;
 
