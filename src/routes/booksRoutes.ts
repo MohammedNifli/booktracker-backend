@@ -1,6 +1,5 @@
-import { Elysia, error } from "elysia";
+import { Elysia } from "elysia";
 import { bookSchema } from "../schemas/bookSchema";
-import { parse } from "dotenv";
 import { db } from "../db";
 import { books } from "../models/book";
 import { eq } from "drizzle-orm";
