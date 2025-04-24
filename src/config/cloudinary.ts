@@ -10,8 +10,9 @@ cloudinary.config({
 type CloudinaryUploadResult = {
     secure_url: string;
     public_id: string;
-    // Add more fields if needed
+    
   };
+  
   
   export const uploadToCloudinary = async (file: File): Promise<CloudinaryUploadResult> => {
     const arrayBuffer = await file.arrayBuffer();
