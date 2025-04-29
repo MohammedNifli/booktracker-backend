@@ -9,6 +9,8 @@ import { uploadToCloudinary } from "../config/cloudinary";
 
 const booksRoutes = new Elysia({ prefix: "/books" });
 
+//route for add new book
+
 booksRoutes.post("/", async ({ request, set }) => {
   try {
     const formData = await request.formData();
